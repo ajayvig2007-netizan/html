@@ -83,12 +83,26 @@
   });
 
   function showGreeting() {
-    const name = input.value.trim();
+  const name = input.value.trim();
 
-    if (name === "") {
-      alert("Please enter your name");
-      return;
-    }
+  if (name === "") {
+    alert("Please enter your name");
+    return;
+  }
+
+  // Clear old text first
+  greetBox.textContent = "";
+  greetBox.classList.remove("show");
+
+  // Force reflow to restart animation cleanly
+  void greetBox.offsetWidth;
+
+  // Set new text
+  greetBox.textContent = `Hello, ${name} 👋 Welcome!`;
+
+  // Show with animation
+  greetBox.classList.add("show");
+}
 
     greetBox.textContent = `Hello, ${name} 👋 Welcome!`;
     greetBox.classList.remove("show");
