@@ -83,35 +83,28 @@
   });
 
   function showGreeting() {
-  const name = input.value.trim();
+    const name = input.value.trim();
 
-  if (name === "") {
-    alert("Please enter your name");
-    return;
-  }
+    if (name === "") {
+      alert("Please enter your name");
+      return;
+    }
 
-  // Clear old text first
-  greetBox.textContent = "";
-  greetBox.classList.remove("show");
-
-  // Force reflow to restart animation cleanly
-  void greetBox.offsetWidth;
-
-  // Set new text
-  greetBox.textContent = `Hello, ${name} 👋 Welcome!`;
-
-  // Show with animation
-  greetBox.classList.add("show");
-}
-
-    greetBox.textContent = `Hello, ${name} 👋 Welcome!`;
+    // clear old text
+    greetBox.textContent = "";
     greetBox.classList.remove("show");
 
     // restart animation
     void greetBox.offsetWidth;
 
+    // set new text
+    greetBox.textContent = `Hello, ${name} 👋 Welcome!`;
+
+    // show animation
     greetBox.classList.add("show");
-     input.value = "";
+
+    // clear input
+    input.value = "";
   }
 </script>
 
