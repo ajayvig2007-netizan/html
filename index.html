@@ -1,0 +1,527 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+
+<title>My Music</title>
+
+<script src="https://cdnjs.cloudflare.com/ajax/libs/howler/2.2.4/howler.min.js"></script>
+
+<style>
+
+*{
+    margin:0;
+    padding:0;
+    box-sizing:border-box;
+    font-family:Arial;
+}
+
+body{
+    background:#0f0f0f;
+    color:white;
+    display:flex;
+    height:100vh;
+}
+
+.sidebar{
+    width:280px;
+    background:#181818;
+    padding:20px;
+    overflow-y:auto;
+}
+
+.logo{
+    font-size:28px;
+    font-weight:bold;
+    margin-bottom:25px;
+    color:#1db954;
+}
+
+.song{
+    display:flex;
+    align-items:center;
+    gap:12px;
+    padding:10px;
+    border-radius:10px;
+    cursor:pointer;
+    margin-bottom:10px;
+    transition:0.2s;
+}
+
+.song:hover{
+    background:#282828;
+}
+
+.song img{
+    width:55px;
+    height:55px;
+    border-radius:8px;
+    object-fit:cover;
+}
+
+.song.active{
+    background:#1db954;
+    color:black;
+}
+
+.main{
+    flex:1;
+    display:flex;
+    justify-content:center;
+    align-items:center;
+    padding:30px;
+}
+
+.player{
+    width:420px;
+    background:#181818;
+    border-radius:20px;
+    padding:25px;
+}
+
+.cover{
+    width:100%;
+    height:320px;
+    object-fit:cover;
+    border-radius:20px;
+}
+
+.title{
+    font-size:28px;
+    margin-top:20px;
+    font-weight:bold;
+}
+
+.artist{
+    color:#aaa;
+    margin-top:5px;
+}
+
+.seek{
+    width:100%;
+    margin-top:25px;
+}
+
+.time{
+    display:flex;
+    justify-content:space-between;
+    margin-top:5px;
+    color:#aaa;
+}
+
+.controls{
+    display:flex;
+    justify-content:center;
+    align-items:center;
+    gap:20px;
+    margin-top:25px;
+}
+
+button{
+    border:none;
+    cursor:pointer;
+}
+
+.control-btn{
+    width:60px;
+    height:60px;
+    border-radius:50%;
+    background:#282828;
+    color:white;
+    font-size:22px;
+}
+
+.play-btn{
+    width:75px;
+    height:75px;
+    border-radius:50%;
+    background:#1db954;
+    color:black;
+    font-size:30px;
+}
+
+.volume{
+    width:100%;
+    margin-top:20px;
+}
+
+</style>
+
+</head>
+
+<body>
+
+<div class="sidebar">
+
+    <div class="logo">
+        My Music
+    </div>
+
+    <div id="playlist"></div>
+
+</div>
+
+<div class="main">
+
+    <div class="player">
+
+        <img id="cover" class="cover">
+
+        <div class="title" id="title"></div>
+
+        <div class="artist" id="artist"></div>
+
+        <input
+            type="range"
+            id="seek"
+            class="seek"
+            min="0"
+            max="100"
+            value="0"
+        >
+
+        <div class="time">
+
+            <span id="current">
+                0:00
+            </span>
+
+            <span id="duration">
+                0:00
+            </span>
+
+        </div>
+
+        <div class="controls">
+
+            <button
+                class="control-btn"
+                onclick="prevSong()"
+            >
+                ⏮
+            </button>
+
+            <button
+                class="play-btn"
+                id="playBtn"
+                onclick="togglePlay()"
+            >
+                ▶
+            </button>
+
+            <button
+                class="control-btn"
+                onclick="nextSong()"
+            >
+                ⏭
+            </button>
+
+        </div>
+
+        <input
+            type="range"
+            id="volume"
+            class="volume"
+            min="0"
+            max="1"
+            step="0.01"
+            value="1"
+        >
+
+    </div>
+
+</div>
+
+<script>
+
+const songs = [
+
+{
+    title:"Dooron Dooron",
+    artist:"Paresh Pahuja",
+    cover:"images/Dooron-Dooron.jpg",
+    src:"songs/Dooron Dooron.mp3"
+},
+
+{ 
+    title:"kadhal en kadhal",
+    artist:" Dhanush",
+    cover:"images/maxresdefault.jpg",
+    src:"songs/Kadhal-Yen-Kadhal.mp3"
+},
+{ 
+    title:"Neeyum Naanum",
+    artist:"Anirudh",
+    cover:"images/neeyum nanum.jpg",
+    src:"songs/Neeyum-Naanum.mp3"
+
+},
+{ 
+    title:"Singari",
+    artist:"sai abhyankkar",
+    cover:"images/hqdefault.jpg",
+    src:"songs/Singari-Sai-Abhyankkar-NaaSongs.mp3"
+
+},
+{ 
+    title:"Nee Gunde Lona",
+    artist:"Anirudh",
+    cover:"images/download.jfif",
+    src:"songs/Singari-Sai-Abhyankkar-NaaSongs.mp3"
+
+},
+
+];
+
+let currentIndex = 0;
+
+let sound;
+
+let interval;
+
+const title =
+    document.getElementById("title");
+
+const artist =
+    document.getElementById("artist");
+
+const cover =
+    document.getElementById("cover");
+
+const seek =
+    document.getElementById("seek");
+
+const current =
+    document.getElementById("current");
+
+const duration =
+    document.getElementById("duration");
+
+const playBtn =
+    document.getElementById("playBtn");
+
+const playlist =
+    document.getElementById("playlist");
+
+const volume =
+    document.getElementById("volume");
+
+function loadSong(index){
+
+    if(sound){
+
+        sound.unload();
+    }
+
+    const song = songs[index];
+
+    title.innerText = song.title;
+
+    artist.innerText = song.artist;
+
+    cover.src = song.cover;
+
+    sound = new Howl({
+
+        src:[song.src],
+
+        preload:true,
+
+        html5:false,
+
+        volume:1,
+
+        pool:10,
+
+        onload:()=>{
+
+            duration.innerText =
+                formatTime(sound.duration());
+        },
+
+        onplay:()=>{
+
+            playBtn.innerText = "⏸";
+
+            startTracking();
+        },
+
+        onpause:()=>{
+
+            playBtn.innerText = "▶";
+
+            clearInterval(interval);
+        },
+
+        onend:()=>{
+
+            nextSong();
+        }
+    });
+
+    updatePlaylist();
+}
+
+function togglePlay(){
+
+    if(sound.playing()){
+
+        sound.pause();
+
+    }else{
+
+        sound.play();
+    }
+}
+
+function nextSong(){
+
+    currentIndex++;
+
+    if(currentIndex >= songs.length){
+
+        currentIndex = 0;
+    }
+
+    loadSong(currentIndex);
+
+    sound.play();
+}
+
+function prevSong(){
+
+    currentIndex--;
+
+    if(currentIndex < 0){
+
+        currentIndex = songs.length - 1;
+    }
+
+    loadSong(currentIndex);
+
+    sound.play();
+}
+
+function startTracking(){
+
+    clearInterval(interval);
+
+    interval = setInterval(()=>{
+
+        if(sound && sound.playing()){
+
+            let currentTime =
+                sound.seek() || 0;
+
+            let total =
+                sound.duration() || 0;
+
+            current.innerText =
+                formatTime(currentTime);
+
+            duration.innerText =
+                formatTime(total);
+
+            seek.value =
+                (currentTime / total) * 100 || 0;
+        }
+
+    },200);
+}
+
+seek.addEventListener("input",()=>{
+
+    if(sound){
+
+        let seekTime =
+            (seek.value / 100) *
+            sound.duration();
+
+        sound.seek(seekTime);
+    }
+});
+
+volume.addEventListener("input",()=>{
+
+    if(sound){
+
+        sound.volume(volume.value);
+    }
+});
+
+function formatTime(sec){
+
+    if(isNaN(sec)) return "0:00";
+
+    let min =
+        Math.floor(sec / 60);
+
+    let seconds =
+        Math.floor(sec % 60);
+
+    if(seconds < 10){
+
+        seconds = "0" + seconds;
+    }
+
+    return min + ":" + seconds;
+}
+
+function renderPlaylist(){
+
+    playlist.innerHTML = "";
+
+    songs.forEach((song,index)=>{
+
+        let div =
+            document.createElement("div");
+
+        div.className = "song";
+
+        div.innerHTML = `
+            <img src="${song.cover}">
+            <div>
+                <div>${song.title}</div>
+                <small>${song.artist}</small>
+            </div>
+        `;
+
+        div.onclick = ()=>{
+
+            currentIndex = index;
+
+            loadSong(index);
+
+            sound.play();
+        };
+
+        playlist.appendChild(div);
+    });
+}
+
+function updatePlaylist(){
+
+    const items =
+        document.querySelectorAll(".song");
+
+    items.forEach((item,index)=>{
+
+        item.classList.remove("active");
+
+        if(index === currentIndex){
+
+            item.classList.add("active");
+        }
+    });
+}
+
+renderPlaylist();
+
+loadSong(currentIndex);
+
+</script>
+
+</body>
+</html>
